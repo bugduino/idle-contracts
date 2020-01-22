@@ -1,0 +1,12 @@
+pragma solidity 0.5.11;
+
+interface ILendingProtocolETH {
+  function mint() external returns (uint256);
+  function redeem(address payable account) external returns (uint256);
+  function nextSupplyRate(uint256 amount) external view returns (uint256);
+  function nextSupplyRateWithParams(uint256[] calldata params) external view returns (uint256);
+  function getAPR() external view returns (uint256);
+  function getPriceInToken() external view returns (uint256);
+  function token() external view returns (address);
+  function underlying() external view returns (address);
+}

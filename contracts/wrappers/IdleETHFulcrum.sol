@@ -1,0 +1,144 @@
+/**
+ * @title: Fulcrum wrapper
+ * @summary: Used for interacting with Fulcrum. Has
+ *           a common interface with all other protocol wrappers.
+ *           This contract holds assets only during a tx, after tx it should be empty
+ * @author: William Bergamo, idle.finance
+ */
+pragma solidity 0.5.11;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
+
+import "../interfaces/iERC20Fulcrum.sol";
+import "../interfaces/ILendingProtocol.sol";
+
+contract IdleETHFulcrum is ILendingProtocol, Ownable {
+  using SafeERC20 for IERC20;
+  using SafeMath for uint256;
+
+  // protocol token (iToken) address
+  address public token;
+  address public idleToken;
+  /**
+   * @param _token : iToken address
+   */
+  constructor(address _token) public {
+    require(_token != address(0), 'FULC: _token addr is 0');
+
+    token = _token;
+  }
+
+  /**
+   * Throws if called by any account other than IdleToken contract.
+   */
+  modifier onlyIdle() {
+    require(msg.sender == idleToken, "Ownable: caller is not IdleToken contract");
+    _;
+  }
+
+  // onlyOwner
+  /**
+   * sets idleToken address
+   * NOTE: can be called only once. It's not on the constructor because we are deploying this contract
+   *       after the IdleToken contract
+   * @param _idleToken : idleToken address
+   */
+  function setIdleToken(address _idleToken)
+    external onlyOwner {
+      require(idleToken == address(0), "idleToken addr already set");
+      require(_idleToken != address(0), "_idleToken addr is 0");
+      idleToken = _idleToken;
+  }
+  // end onlyOwner
+
+  /**
+   * Gets next supply rate from Fulcrum, given an `_amount` supplied
+   *
+   * @param _amount : new underlying amount supplied (eg DAI)
+   * @return nextRate : yearly net rate
+   */
+  function nextSupplyRate(uint256 _amount)
+    external view
+    returns (uint256) {
+      return iERC20Fulcrum(token).nextSupplyInterestRate(_amount);
+  }
+
+  /**
+   * Calculate next supply rate from Fulcrum, given an `_amount` supplied (last array param)
+   * and all other params supplied. See `info_fulcrum.md` for more info
+   * on calculations.
+   *
+   * @param params : array with all params needed for calculation (see below)
+   * @return : yearly net rate
+   */
+  function nextSupplyRateWithParams(uint256[] calldata params)
+    external view
+    returns (uint256) {
+      /*
+        uint256 a1 = params[0]; // protocolInterestRate;
+        uint256 b1 = params[1]; // totalAssetBorrow;
+        uint256 s1 = params[2]; // totalAssetSupply;
+        uint256 x1 = params[3]; // _amount;
+      */
+
+      // q = (a1 * b1 / (s1 + x1))
+      return params[0].mul(params[1]).div(params[2].add(params[3]));
+  }
+
+  /**
+   * @return current price of iToken in underlying
+   */
+  function getPriceInToken()
+    external view
+    returns (uint256) {
+      return iERC20Fulcrum(token).tokenPrice();
+  }
+
+  /**
+   * @return apr : current yearly net rate
+   */
+  function getAPR()
+    external view
+    returns (uint256) {
+      return iERC20Fulcrum(token).nextSupplyInterestRate(0);
+  }
+
+  /**
+   * Gets all underlying tokens in this contract and mints iTokens
+   * tokens are then transferred to msg.sender
+   * NOTE: underlying tokens needs to be sended here before calling this
+   *
+   * @return iTokens minted
+   */
+  function mint()
+    external onlyIdle
+    returns (uint256 iTokens) {
+      uint256 balance = address(this).balance;
+      if (balance == 0) {
+        return iTokens;
+      }
+      // mint the iTokens and transfer to msg.sender
+      iTokens = iERC20Fulcrum(token).mintWithEther.value(balance)(msg.sender);
+  }
+
+  /**
+   * Gets all iTokens in this contract and redeems underlying tokens.
+   * underlying tokens are then transferred to `_account`
+   * NOTE: iTokens needs to be sended here before calling this
+   *
+   * @return underlying tokens redeemd
+   */
+  function redeem(address _account)
+    external onlyIdle
+    returns (uint256 tokens) {
+      uint256 balance = IERC20(token).balanceOf(address(this));
+      uint256 expectedAmount = balance.mul(iERC20Fulcrum(token).tokenPrice()).div(10**18);
+
+      tokens = iERC20Fulcrum(token).burnToEther(_account, balance);
+      require(tokens >= expectedAmount, "Not enough liquidity on Fulcrum");
+  }
+
+  function() external payable {}
+}

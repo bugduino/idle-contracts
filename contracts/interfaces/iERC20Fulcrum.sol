@@ -7,8 +7,20 @@ interface iERC20Fulcrum {
     external
     returns (uint256 mintAmount);
 
+  function mintWithEther(
+    address receiver)
+    external
+    payable
+    returns (uint256 mintAmount);
+
   function burn(
     address receiver,
+    uint256 burnAmount)
+    external
+    returns (uint256 loanAmountPaid);
+
+  function burnToEther(
+    address payable receiver,
     uint256 burnAmount)
     external
     returns (uint256 loanAmountPaid);

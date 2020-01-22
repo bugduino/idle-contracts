@@ -45,7 +45,6 @@ contract iDAIMock is ERC20Detailed, ERC20, iERC20Fulcrum {
     require(IERC20(dai).transfer(receiver, amount * price / 10**18), "Error during transfer"); // 1 DAI
     return amount * price / 10**18;
   }
-
   function mintWithEther(address receiver) external payable returns (uint256) {
   }
   function burnWithEther(address payable receiver, uint256 amount) external returns (uint256) {
@@ -147,4 +146,6 @@ contract iDAIMock is ERC20Detailed, ERC20, iERC20Fulcrum {
     external
     view
     returns (uint256) {}
+
+  function() external payable {}
 }
