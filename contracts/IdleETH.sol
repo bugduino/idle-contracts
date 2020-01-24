@@ -69,7 +69,6 @@ contract IdleETH is ERC20, ERC20Detailed, ReentrancyGuard, Ownable, Pausable, II
    * @param _name : IdleToken name
    * @param _symbol : IdleToken symbol
    * @param _decimals : IdleToken decimals
-   * @param _token : underlying token address
    * @param _cToken : cToken address
    * @param _iToken : iToken address
    * @param _rebalancer : Idle Rebalancer address
@@ -237,7 +236,7 @@ contract IdleETH is ERC20, ERC20Detailed, ReentrancyGuard, Ownable, Pausable, II
       uint256 idlePrice = tokenPrice();
 
       // Rebalance the current pool if needed and mint new supplyied amount
-      rebalance.value(msg.value)(_clientProtocolAmounts);
+      this.rebalance.value(msg.value)(_clientProtocolAmounts);
 
       mintedTokens = msg.value.mul(10**18).div(idlePrice);
       _mint(msg.sender, mintedTokens);
@@ -256,7 +255,7 @@ contract IdleETH is ERC20, ERC20Detailed, ReentrancyGuard, Ownable, Pausable, II
   function getParamsForMintIdleToken()
     external payable nonLocallyReentrant whenNotPaused whenITokenPriceHasNotDecreased
     returns (address[] memory, uint256[] memory) {
-      mintIdleToken.value(msg.value)(new uint256[](0));
+      this.mintIdleToken.value(msg.value)(new uint256[](0));
       return _getCurrentAllocations();
   }
 
@@ -297,7 +296,7 @@ contract IdleETH is ERC20, ERC20Detailed, ReentrancyGuard, Ownable, Pausable, II
         return redeemedTokens;
       }
 
-      rebalance.value(0)(_clientProtocolAmounts);
+      this.rebalance.value(0)(_clientProtocolAmounts);
   }
 
   /**
@@ -357,7 +356,7 @@ contract IdleETH is ERC20, ERC20Detailed, ReentrancyGuard, Ownable, Pausable, II
     external whenNotPaused whenITokenPriceHasNotDecreased
     returns (uint256 claimedTokens) {
       claimedTokens = iERC20Fulcrum(iToken).claimLoanToken();
-      rebalance.value(claimedTokens)(_clientProtocolAmounts);
+      this.rebalance.value(claimedTokens)(_clientProtocolAmounts);
   }
 
   /**
@@ -459,7 +458,7 @@ contract IdleETH is ERC20, ERC20Detailed, ReentrancyGuard, Ownable, Pausable, II
   function getParamsForRebalance()
     external payable whenNotPaused whenITokenPriceHasNotDecreased
     returns (address[] memory, uint256[] memory) {
-      rebalance.value(msg.value)(new uint256[](0));
+      this.rebalance.value(msg.value)(new uint256[](0));
       return _getCurrentAllocations();
   }
 

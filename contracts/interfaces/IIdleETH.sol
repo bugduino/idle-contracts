@@ -36,7 +36,6 @@ interface IIdleETH {
   function mintIdleToken(uint256[] calldata _clientProtocolAmounts) external payable returns (uint256 mintedTokens);
 
   /**
-   * @param _amount : amount of underlying token to be lended
    * @return : address[] array with all token addresses used,
    *                          eg [cTokenAddress, iTokenAddress]
    * @return : uint256[] array with all amounts for each protocol in order,
