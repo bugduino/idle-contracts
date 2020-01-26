@@ -136,7 +136,7 @@ contract IdleETHFulcrum is ILendingProtocol, Ownable {
       uint256 balance = IERC20(token).balanceOf(address(this));
       uint256 expectedAmount = balance.mul(iERC20Fulcrum(token).tokenPrice()).div(10**18);
 
-      tokens = iERC20Fulcrum(token).burnToEther(_account, balance);
+      tokens = iERC20Fulcrum(token).burnToEther(address(uint160(_account)), balance);
       require(tokens >= expectedAmount, "Not enough liquidity on Fulcrum");
   }
 

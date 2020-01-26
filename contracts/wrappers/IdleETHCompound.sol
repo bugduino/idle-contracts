@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-import "../interfaces/CERC20.sol";
+import "../interfaces/CERC20Eth.sol";
 import "../interfaces/ILendingProtocol.sol";
 import "../interfaces/WhitePaperInterestRateModel.sol";
 
@@ -108,7 +108,7 @@ contract IdleETHCompound is ILendingProtocol, Ownable {
   function nextSupplyRate(uint256 _amount)
     external view
     returns (uint256) {
-      CERC20 cToken = CERC20(token);
+      CERC20Eth cToken = CERC20Eth(token);
       WhitePaperInterestRateModel white = WhitePaperInterestRateModel(cToken.interestRateModel());
       uint256[] memory params = new uint256[](10);
 
@@ -133,7 +133,7 @@ contract IdleETHCompound is ILendingProtocol, Ownable {
   function getPriceInToken()
     external view
     returns (uint256) {
-      return CERC20(token).exchangeRateStored();
+      return CERC20Eth(token).exchangeRateStored();
   }
 
   /**
@@ -142,7 +142,7 @@ contract IdleETHCompound is ILendingProtocol, Ownable {
   function getAPR()
     external view
     returns (uint256 apr) {
-      CERC20 cToken = CERC20(token);
+      CERC20Eth cToken = CERC20Eth(token);
       WhitePaperInterestRateModel white = WhitePaperInterestRateModel(cToken.interestRateModel());
       uint256 cRate = cToken.supplyRatePerBlock(); // interest % per block
       apr = cRate.mul(white.blocksPerYear()).mul(100);
@@ -163,7 +163,7 @@ contract IdleETHCompound is ILendingProtocol, Ownable {
         return cTokens;
       }
       // get a handle for the corresponding cToken contract
-      CERC20 _cToken = CERC20(token);
+      CERC20Eth _cToken = CERC20Eth(token);
       // mint the cTokens and assert there is no error
       require(_cToken.mint.value(balance)() == 0, "Error minting");
       // cTokens are now in this contract
@@ -184,7 +184,7 @@ contract IdleETHCompound is ILendingProtocol, Ownable {
     external onlyIdle
     returns (uint256 tokens) {
       // Funds needs to be sended here before calling this
-      CERC20 _cToken = CERC20(token);
+      CERC20Eth _cToken = CERC20Eth(token);
       // redeem all underlying sent in this contract
       require(_cToken.redeem(IERC20(token).balanceOf(address(this))) == 0, "Something went wrong when redeeming in cTokens");
 
