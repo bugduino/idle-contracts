@@ -4,10 +4,12 @@ pragma solidity 0.5.11;
 import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../interfaces/CERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "../interfaces/CERC20Eth.sol";
 
-contract cDAIMock is ERC20Detailed, ERC20, CERC20 {
-  address public dai;
+contract cETHMock is ERC20Detailed, ERC20, CERC20Eth {
+  using Address for address payable;
+
   uint256 public toTransfer;
   uint256 public toMint;
 
@@ -19,27 +21,24 @@ contract cDAIMock is ERC20Detailed, ERC20, CERC20 {
   uint256 public _reserveFactorMantissa;
   uint256 public _getCash;
 
-  constructor(address _dai, address tokenOwner, address interestRateModel)
+  constructor(address tokenOwner, address interestRateModel)
     ERC20()
-    ERC20Detailed('cDAI', 'cDAI', 8) public {
-    dai = _dai;
+    ERC20Detailed('cETH', 'cETH', 8) public {
     _interestRateModel = interestRateModel;
     _exchangeRate = 200000000000000000000000000;
     _supplyRate = 32847953230;
-    _mint(address(this), 10**14); // 1.000.000 cDAI
-    _mint(tokenOwner, 10**13); // 100.000 cDAI
+    _mint(address(this), 10**14); // 1.000.000 cETH
+    _mint(tokenOwner, 10**13); // 100.000 cETH
   }
 
   function mint() external payable returns (uint256) {
-  }
-  function mint(uint256 amount) external returns (uint256) {
-    require(IERC20(dai).transferFrom(msg.sender, address(this), amount), "Error during transferFrom"); // 1 DAI
-    _mint(msg.sender, (amount * 10**18)/_exchangeRate);
+    _mint(msg.sender, (msg.value * 10**18)/_exchangeRate);
     return 0;
   }
+
   function redeem(uint256 amount) external returns (uint256) {
     _burn(msg.sender, amount);
-    require(IERC20(dai).transfer(msg.sender, amount * _exchangeRate / 10**18), "Error during transfer"); // 1 DAI
+    msg.sender.sendValue(amount * _exchangeRate / 10**18);
     return 0;
   }
 

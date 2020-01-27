@@ -38,6 +38,10 @@ contract IdleETHFulcrum is ILendingProtocol, Ownable {
     _;
   }
 
+  function underlying() external view returns (address) {
+    return address(0);
+  }
+
   // onlyOwner
   /**
    * sets idleToken address
