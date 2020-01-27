@@ -4,11 +4,13 @@ pragma solidity 0.5.11;
 import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../interfaces/iERC20Fulcrum.sol";
 
-contract iDAIMock is ERC20Detailed, ERC20, iERC20Fulcrum {
+contract iETHMock is ERC20Detailed, ERC20, iERC20Fulcrum {
+  using Address for address payable;
+
   bool public isUsingFakeBurn;
-  address public dai;
   uint256 public exchangeRate;
   uint256 public toTransfer;
   uint256 public supplyRate;
@@ -19,39 +21,37 @@ contract iDAIMock is ERC20Detailed, ERC20, iERC20Fulcrum {
   uint256 public _totalAssetBorrow;
   uint256 public _totalAssetSupply;
 
-  constructor(address _dai, address _someone)
+  constructor(address _someone)
     ERC20()
-    ERC20Detailed('iDAI', 'iDAI', 18) public {
+    ERC20Detailed('iETH', 'iETH', 18) public {
     isUsingFakeBurn = false;
-    dai = _dai;
     toTransfer = 10**18;
     supplyRate = 3000000000000000000; // 3%
-    price = 1100000000000000000; // 1.1 DAI
+    price = 1100000000000000000; // 1.1 ETH
     spreadMultiplier = 90000000000000000000; // 90%
-    _mint(address(this), 10000 * 10**18); // 10.000 iDAI
-    _mint(_someone, 10000 * 10**18); // 10.000 iDAI
+    _mint(address(this), 10000 * 10**18); // 10.000 iETH
+    _mint(_someone, 10000 * 10**18); // 10.000 iETH
   }
 
   function mint(address receiver, uint256 amount) external returns (uint256) {
-    require(IERC20(dai).transferFrom(msg.sender, address(this), amount), "Error during transferFrom");
-    _mint(receiver, (amount * 10**18)/price);
-    return (amount * 10**18)/price;
   }
   function burn(address receiver, uint256 amount) external returns (uint256) {
-    if (isUsingFakeBurn) {
-      return 1000000000000000000; // 10 DAI
-    }
-    _burn(msg.sender, amount);
-    require(IERC20(dai).transfer(receiver, amount * price / 10**18), "Error during transfer"); // 1 DAI
-    return amount * price / 10**18;
   }
   function mintWithEther(address receiver) external payable returns (uint256) {
+    _mint(receiver, (msg.value * 10**18)/price);
+    return (msg.value * 10**18)/price;
   }
-  function burnWithEther(address payable receiver, uint256 amount) external returns (uint256) {
+  function burnToEther(address payable receiver, uint256 amount) external returns (uint256) {
+    if (isUsingFakeBurn) {
+      return 1000000000000000000; // 10 ETH
+    }
+    _burn(msg.sender, amount);
+    receiver.sendValue(amount * price / 10**18);
+    return amount * price / 10**18;
   }
 
   function claimLoanToken() external returns (uint256)  {
-    require(this.transfer(msg.sender, toTransfer), "Error during transfer"); // 1 DAI
+    require(this.transfer(msg.sender, toTransfer), "Error during transfer"); // 1 ETH
     return toTransfer;
   }
   function setParams(uint256[] memory params) public {
