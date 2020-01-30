@@ -534,6 +534,11 @@ contract IdleETHWithPublicRebalanceCheck is ERC20, ERC20Detailed, ReentrancyGuar
       return IdleRebalancer(rebalancer).calcRebalanceAmounts(paramsRebalance);
   }
 
+  function getCurrentAllocations() external view
+    returns (address[] memory tokenAddresses, uint256[] memory amounts) {
+      return _getCurrentAllocations();
+  }
+
   /**
    * Get addresses of current tokens and protocol wrappers used
    *

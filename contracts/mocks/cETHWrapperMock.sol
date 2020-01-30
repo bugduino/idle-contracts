@@ -88,4 +88,5 @@ contract cETHWrapperMock is ILendingProtocol, Ownable {
   function setIdleToken(address) external {
 
   }
+  function() external payable {}
 }

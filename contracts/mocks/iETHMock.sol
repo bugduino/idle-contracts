@@ -51,7 +51,7 @@ contract iETHMock is ERC20Detailed, ERC20, iERC20Fulcrum {
   }
 
   function claimLoanToken() external returns (uint256)  {
-    require(this.transfer(msg.sender, toTransfer), "Error during transfer"); // 1 ETH
+    msg.sender.sendValue(toTransfer);
     return toTransfer;
   }
   function setParams(uint256[] memory params) public {
