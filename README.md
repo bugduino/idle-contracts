@@ -1,3 +1,7 @@
+############
+THIS REPO HAS BEEN MOVED HERE https://github.com/Idle-Labs/idle-contracts
+############
+
 # Idle contracts
 Live version: [https://idle.finance](https://idle.finance)
 
